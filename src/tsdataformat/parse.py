@@ -3,6 +3,7 @@ import os
 import pendulum
 import string
 import sys
+from ._version import __version__
 
 na = 'NaN'
 sep = '\t'
@@ -67,7 +68,7 @@ def sanitize_column_name(colname):
 @click.command()
 @click.argument('infile', type=click.Path(exists=True), nargs=1)
 @click.argument('outfile', type=click.Path(), nargs=1)
-@click.version_option()
+@click.version_option(version=__version__)
 def cli(infile, outfile):
     with open(infile, mode='r', encoding='utf-8') as fin:
         with open(outfile, mode='w', encoding='utf-8') as fout:
