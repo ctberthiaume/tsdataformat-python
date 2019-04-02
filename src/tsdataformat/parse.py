@@ -40,7 +40,8 @@ typelu = {
 
 
 def parse_line(line, types):
-    fields = line.rstrip().split(sep)
+    fields = [f.strip() for f in line.rstrip().split(sep)]
+
     valid = []
     if len(fields) != len(types):
         raise ValueError("field count doesn't match type count in header")
@@ -79,11 +80,11 @@ def cli(infile, outfile):
                     print("error in header of infile", file=sys.stderr)
                     sys.exit(1)
                 header_lines.append(line)
-            headers = header_lines[6].split(sep)
+            headers = [h.strip() for h in header_lines[6].split(sep)]
             sanitized_headers = [sanitize_column_name(h) for h in headers]
             fout.write(','.join(sanitized_headers) + '\n')
             
-            types = header_lines[4].split(sep)
+            types = [t.strip() for t in header_lines[4].split(sep)]
 
             linenum = 8
             for line in fin:
