@@ -1,32 +1,16 @@
 from setuptools import setup, find_packages
-import re
-import sys
-
-
-VERSIONFILE="src/tsdataformat/_version.py"
-verstrline = open(VERSIONFILE, "rt").read()
-VSRE = r"^__version__ = ['\"]([^'\"]*)['\"]"
-mo = re.search(VSRE, verstrline, re.M)
-if mo:
-    verstr = mo.group(1)
-else:
-    raise RuntimeError("Unable to find version string in %s." % (VERSIONFILE,))
-
-
-url = 'https://github.com/ctberthiaume/tsdataformat-python'
-download_url = url + '/archive/{}.tar.gz'.format(verstr)
-
+import versioneer
 
 setup(
     name='tsdataformat',
-    version=verstr,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     author='Chris T. Berthiaume',
     author_email='chrisbee@uw.edu',
     license='MIT',
-    description='A tool to validate and csv-ify a time series data format',
+    description='A Python project to manage time series data',
     long_description=open('README.rst', 'r').read(),
-    url=url,
-    download_url=download_url,
+    url='https://github.com/ctberthiaume/tsdataformat-python',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     include_package_data=True,
@@ -39,16 +23,17 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3 :: Only'
     ],
-    keywords = ['csv', 'command-line', 'time series'],
-    python_requires='>=3.0, <4',
+    keywords = ['csv', 'command-line', 'time series', 'tsdata'],
+    python_requires='>=3.7, <4',
     install_requires=[
+        'ciso8601',
         'click',
-        'pendulum'
+        'pandas'
     ],
     zip_safe=True,
     entry_points={
         'console_scripts': [
-            'tsdataformat2csv = tsdataformat:cli'
+            'tsdataformat=tsdataformat.cli:cli'
         ]
     }
 )
