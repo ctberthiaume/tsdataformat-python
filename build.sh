@@ -1,28 +1,19 @@
-#!/usr/bin/env bash -e
-# Run this from within a conda environment seeded with just pip and conda
-# conda create -n pydev pip conda
+#!/usr/bin/env bash
 
-# Then install other python dev packages with pip
-# conda activate pydev
-# (pydev) pip install keyring twine detox pytest
+# Run this from within a venv seeded with some updates
+# python -m venv myvenv
+# source myvenv/bin/activate
+# pip install -U pip setuptools wheel twine keyring
 
-# Test
-#detox
-
-# Don't forget to update _version.py
+# Assume version is 0.3.0 for examples below
+# Then tag commit, push, tag as 0.3.0 in github, matching source version
+# Finally to upload to pypi
 
 # Build for PyPI
 [ -d build ] && rm -rf build
 [ -d dist ] && rm -rf dist
 [ -d src/tsdataformat.egg-info ] && rm -rf src/tsdataformat.egg-info
 python setup.py sdist bdist_wheel
-
-# Assume version is 0.3.0 for examples below
-# Then tag commit, push, tag as 0.3.0 in github, matching source version
-# Finally to upload to pypi
-
-# Update pip, setuptools, wheel, twine, keyring
-# install -U pip setuptools wheel twine keyring
 
 # Assume this is your ~/.pypirc
 #[distutils]

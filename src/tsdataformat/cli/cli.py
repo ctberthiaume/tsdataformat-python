@@ -21,6 +21,7 @@ def cli():
 @click.option('-o', '--out', 'outfile', type=click.File('w'), required=True,
               help="Output file path. Accepts '-' for stdin.")
 def csv_cmd(infile, outfile):
+    """Converts a Tsdata file to CSV"""
     try:
         tsdataformat.tsdata_to_csv(infile, outfile)
     except (ValueError, IOError) as e:
@@ -39,6 +40,9 @@ def csv_cmd(infile, outfile):
 @click.option('-e', '--exclude-category', type=str, multiple=True,
               help="Category or boolean to exclude from groupby operations. Can be supplied multiple times.")
 def resample_cmd(infile, outfile, freq, dropna, exclude_category):
+    """
+    Resamples data with a new frequency.
+    """
     try:
         tsdataformat.resample_tsdata(infile, outfile, freq, dropna=dropna,
                                      exclude_categories=exclude_category)
@@ -54,6 +58,12 @@ def resample_cmd(infile, outfile, freq, dropna, exclude_category):
 @click.option('-c', '--csv', 'csv', is_flag=True,
               help="Output CSV instead of Tsdata file.")
 def clean_cmd(infile, outfile, csv):
+    """
+    Cleans a Tsdata file.
+
+    Removes lines with bad timestamp, updates all invalid values to 'NA',
+    sorts ascending by time.
+    """
     try:
         tsdataformat.clean_tsdata(infile, outfile, csv=csv)
     except (ValueError, IOError) as e:
@@ -64,6 +74,12 @@ def clean_cmd(infile, outfile, csv):
 @click.option('-i', '--in', 'infile', type=click.File('r'), required=True,
               help="Input file path. Accepts '-' for stdin.")
 def validate_cmd(infile):
+    """
+    Validate metadata header and data lines.
+    
+    Exits at the first metadata error, otherwise prints all data line errors
+    found.
+    """
     try:
         metadata = tsdataformat.read_header(infile)
     except IOError as e:
