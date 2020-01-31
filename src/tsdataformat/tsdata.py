@@ -1,5 +1,6 @@
 import copy
 import datetime
+import logging
 import os
 import re
 import string
@@ -8,6 +9,9 @@ import ciso8601
 import numpy as np
 import pandas as pd
 import pytz
+
+
+logger = logging.getLogger('tsdataformat')
 
 
 class Tsdata(object):
@@ -175,9 +179,10 @@ class Tsdata(object):
             raise ValueError("expected {} fields, found {}".format(self.column_count, len(fields)))
         for i, t in enumerate(self.metadata["Types"]):
             valid.append(_typelu[t](fields[i]))
-        if self.lasttime > valid[0]:
-            self.lasttime = valid[0]
-            raise ValueError("timestamp {} not in ascending order".format(fields[0]))
+        # Don't check for time order for now, may reinstate later
+        # if self.lasttime > valid[0]:
+        #     self.lasttime = valid[0]
+        #     raise ValueError("timestamp {} not in ascending order".format(fields[0]))
         self.lasttime = valid[0]
 
         return fields
@@ -195,9 +200,16 @@ def tsdata_to_csv(in_file, out_file):
     ts = Tsdata()
     ts.set_metadata_from_text(read_header(in_file))
     out_file.write(','.join(ts.metadata["Headers"]) + os.linesep)
+    linenum = ts.header_size + 1
     for line in in_file:
-        outputs = ts.validate_line(line)
-        out_file.write(",".join(outputs) + os.linesep)
+        try:
+            outputs = ts.validate_line(line)
+        except ValueError as e:
+            msg = "line {}: {}".format(linenum, e)
+            logger.warning(msg)
+        else:
+            out_file.write(",".join(outputs) + os.linesep)
+        linenum += 1
 
 
 def read_header(in_file):

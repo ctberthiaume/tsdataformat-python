@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 
@@ -5,6 +6,14 @@ import click
 import pkg_resources
 
 import tsdataformat
+
+# Set up logging
+logger = logging.getLogger('tsdataformat')
+ch = logging.StreamHandler()
+ch.setLevel(logging.WARNING)
+formatter = logging.Formatter('%(levelname)s - %(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -80,21 +89,16 @@ def validate_cmd(infile):
     Exits at the first metadata error, otherwise prints all data line errors
     found.
     """
+    ts = tsdataformat.Tsdata()
     try:
-        metadata = tsdataformat.read_header(infile)
-    except IOError as e:
-        raise click.ClickException(str(e))
-    t = tsdataformat.Tsdata()
-
-    try:
-        t.set_metadata_from_text(metadata)
-    except ValueError as e:
+        ts.set_metadata_from_text(tsdataformat.read_header(infile))
+    except (ValueError, IOError) as e:
         raise click.ClickException(str(e))
 
-    linenum = t.header_size + 1
+    linenum = ts.header_size + 1
     for line in infile:
         try:
-            _ = t.validate_line(line)
+            _ = ts.validate_line(line)
         except ValueError as e:
             print(os.linesep.join(["Error with line {}:".format(linenum), line.rstrip(), str(e), '']), file=sys.stderr)
         linenum += 1
