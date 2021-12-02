@@ -2,8 +2,7 @@ import copy
 import datetime
 import logging
 import os
-import re
-import string
+import sys
 
 import ciso8601
 import numpy as np
@@ -42,7 +41,7 @@ class Tsdata(object):
         """
         self.metadata = self._parse_header(metadata)
         self.column_count = len(self.metadata["Headers"])
-        self._validate_metadata()
+        self.validate_metadata()
     
     def set_columns(self, new_headers):
         """Reorder and subset existing columns in metadata."""
@@ -94,6 +93,8 @@ class Tsdata(object):
         lines = metadata.rstrip().splitlines()
         if len(lines) != self.header_size:
             raise ValueError("expected {} header lines, found {}".format(self.header_size, len(lines)))
+        # Prevent a common problem and remove any trailing whitespace
+        lines = [line.rstrip() for line in lines]
         d = {
             "FileType": lines[0],
             "Project": lines[1],
@@ -106,7 +107,7 @@ class Tsdata(object):
         return d
 
 
-    def _validate_metadata(self):
+    def validate_metadata(self):
         keys_present = set(self.metadata.keys())
         keys_required = set([
             "FileType", "Project", "FileDescription", "Comments", "Types",
@@ -255,7 +256,7 @@ def read_tsdata(in_file, convert=None):
         keep_default_na=False
     )
     if convert == "all" or convert == "time":
-        df["time"] = pd.to_datetime(df["time"], errors="coerce", utc=True,
+        df["time"] = pd.to_datetime(df["time"].str.strip(), errors="coerce", utc=True,
                                     infer_datetime_format=True)
 
     if convert == "all":
@@ -269,13 +270,13 @@ def read_tsdata(in_file, convert=None):
         for (col, type_) in zip(ts.metadata["Headers"], ts.metadata["Types"]):
             if type_ == "boolean":
                 cat = pd.api.types.CategoricalDtype(categories=["TRUE", "FALSE", "NA"])
-                df[col] = df[col].astype(cat)
+                df[col] = df[col].str.strip().astype(cat)
             elif type_ == "float":
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("float64")
+                df[col] = pd.to_numeric(df[col].str.strip(), errors="coerce").astype("float64")
             elif type_ == "integer":
-                df[col] = pd.to_numeric(df[col], errors="coerce").astype("Int64")
+                df[col] = pd.to_numeric(df[col].str.strip(), errors="coerce").astype("Int64")
             elif type_ == "category":
-                df[col] = df[col].astype("category")
+                df[col] = df[col].str.strip().astype("category")
 
     return df
 
@@ -352,9 +353,15 @@ def clean_tsdata(in_file, out_file, csv=False):
     in_file.seek(0)
     df2 = read_tsdata(in_file, convert="all")
 
+
+    # Sanity check that these dataframes are same length and can use the same
+    # index.
+    assert len(df) == len(df2)
+
     # Sort by ascending time and remove bad times.
     df2 = df2.sort_values(by=["time"])
     df = df.loc[df2.index] # sort df by new df2 order
+    assert len(df) == len(df2) # sanity check again
     good_times = pd.notna(df2["time"])
     df = df[good_times]
     df2 = df2[good_times]
@@ -362,6 +369,9 @@ def clean_tsdata(in_file, out_file, csv=False):
     # Find NaNs in df2, replace same cells in df with "NA".
     df = df.mask(df2.isna(), "NA")
 
+    # Strip leading and trailing whitespace for all string cells, which should
+    # be all of them here.
+    df = df.applymap(lambda x: x.strip() if type(x) == str else x)
     if not csv:
         out_file.write(ts.header + os.linesep)
         df.to_csv(out_file, sep=Tsdata.sep, header=False, index=False)
