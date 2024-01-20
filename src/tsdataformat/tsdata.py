@@ -256,21 +256,17 @@ def read_tsdata(in_file, convert=None):
         keep_default_na=False
     )
     if convert == "all" or convert == "time":
-        df["time"] = pd.to_datetime(df["time"].str.strip(), errors="coerce", utc=True,
-                                    infer_datetime_format=True)
+        df["time"] = pd.to_datetime(df["time"].str.strip(), errors="coerce", utc=True)
 
     if convert == "all":
         # Convert columns to their correct types, coercing any values which
         # can't be converted to the correct null value. Note that this
         # is more permissive than the strict Tsdata format as more than just
-        # "NA" will be considered NULL. Because of numpy/pandas lack of missing
-        # data support for booleans and to simplify potential
-        # grouping/resampling, booleans will be treated as categorical string
-        # data.
+        # "NA" will be considered NULL.
         for (col, type_) in zip(ts.metadata["Headers"], ts.metadata["Types"]):
             if type_ == "boolean":
-                cat = pd.api.types.CategoricalDtype(categories=["TRUE", "FALSE", "NA"])
-                df[col] = df[col].str.strip().astype(cat)
+                data = df[col].str.strip().replace({"TRUE": True, "FALSE": False, Tsdata.na: pd.NA})
+                df[col] = pd.array(data, dtype="boolean")
             elif type_ == "float":
                 df[col] = pd.to_numeric(df[col].str.strip(), errors="coerce").astype("float64")
             elif type_ == "integer":
