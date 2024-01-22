@@ -262,7 +262,7 @@ def read_tsdata(in_file, convert=None):
         # Convert columns to their correct types, coercing any values which
         # can't be converted to the correct null value. Note that this
         # is more permissive than the strict Tsdata format as more than just
-        # "NA" will be considered NULL.
+        # "NA" will be considered NULL for numeric types.
         for (col, type_) in zip(ts.metadata["Headers"], ts.metadata["Types"]):
             if type_ == "boolean":
                 data = df[col].str.strip().replace({"TRUE": True, "FALSE": False, Tsdata.na: pd.NA})
@@ -272,7 +272,10 @@ def read_tsdata(in_file, convert=None):
             elif type_ == "integer":
                 df[col] = pd.to_numeric(df[col].str.strip(), errors="coerce").astype("Int64")
             elif type_ == "category":
-                df[col] = df[col].str.strip().astype("category")
+                df[col] = df[col].str.strip().replace({Tsdata.na: None}).astype("category")
+            elif type_ == "text":
+                print("converting text")
+                df[col] = df[col].str.strip().replace({Tsdata.na: None})
 
     return df
 
