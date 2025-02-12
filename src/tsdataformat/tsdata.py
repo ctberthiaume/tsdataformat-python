@@ -2,10 +2,8 @@ import copy
 import datetime
 import logging
 import os
-import sys
 
-import ciso8601
-import numpy as np
+from rfc3339_validator import validate_rfc3339
 import pandas as pd
 import pytz
 
@@ -370,7 +368,7 @@ def clean_tsdata(in_file, out_file, csv=False):
 
     # Strip leading and trailing whitespace for all string cells, which should
     # be all of them here.
-    df = df.applymap(lambda x: x.strip() if type(x) == str else x)
+    df = df.map(lambda x: x.strip() if isinstance(x, str) else x)
     if not csv:
         out_file.write(ts.header + os.linesep)
         df.to_csv(out_file, sep=Tsdata.sep, header=False, index=False)
@@ -398,7 +396,10 @@ def _text_check(v):
 
 def _time_check(v):
     # Return datetime.datetime here to avoid parsing twice in places
-    return ciso8601.parse_rfc3339(v)
+    if validate_rfc3339(v):
+        return datetime.datetime.fromisoformat(v)
+    else:
+        raise ValueError(f"{v} is not a valid RFC3339 timestamp string")
 
 
 def _bool_check(v):
