@@ -5,7 +5,6 @@ import os
 
 from rfc3339_validator import validate_rfc3339
 import pandas as pd
-import pytz
 
 
 logger = logging.getLogger('tsdataformat')
@@ -29,7 +28,7 @@ class Tsdata(object):
             "Units": [],
             "Headers": []
         }
-        self.lasttime = datetime.datetime.min.replace(tzinfo=pytz.utc)
+        self.lasttime = datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)
 
     def set_metadata_from_text(self, metadata):
         """
