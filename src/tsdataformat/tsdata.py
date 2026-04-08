@@ -271,7 +271,6 @@ def read_tsdata(in_file, convert=None):
             elif type_ == "category":
                 df[col] = df[col].str.strip().replace({Tsdata.na: None}).astype("category")
             elif type_ == "text":
-                print("converting text")
                 df[col] = df[col].str.strip().replace({Tsdata.na: None})
 
     return df

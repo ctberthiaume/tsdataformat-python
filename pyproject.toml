@@ -1,6 +1,6 @@
 [project]
 name = "tsdataformat"
-version = "3.2.0"
+version = "3.2.1"
 description = "A Python project to manage time series data"
 authors = [
     { name = "Chris T. Berthiaume", email = "chrisbee@uw.edu" }
